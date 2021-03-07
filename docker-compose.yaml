@@ -1,22 +1,22 @@
 version: '3'
 
 services:
-  scylla:
-    image: scylladb/scylla:latest
-    networks:
-      - scylla
-    volumes:
-      - ./data/scylla:/var/lib/scylla
-    ports:
-      - "8000:8000"
-    command: "--smp 2 --memory 2048M --alternator-port 8000 --alternator-write-isolation always_use_lwt"
-
-  cassandra:
+  cass1:
     image: cassandra:latest
     networks:
-      - scylla
+      - cassnetwork
     volumes:
-      - ./data/cassandra:/var/lib/cassandra
+      - ./data/cass1:/var/lib/cassandra
+    # ports:
+    #   - "8000:8000"
+    # command: "--smp 2 --memory 2048M --alternator-port 8000 --alternator-write-isolation always_use_lwt"
+
+  cass2:
+    image: cassandra:latest
+    networks:
+      - cassnetwork
+    volumes:
+      - ./data/cass2:/var/lib/cassandra
 
   spark-master:
     image: bde2020/spark-master:2.4.4-hadoop2.7
@@ -28,7 +28,7 @@ services:
       SPARK_CONF_DIR: /conf
       SPARK_PUBLIC_DNS: spark-master
     networks:
-      - scylla
+      - cassnetwork
     expose:
       - 7001
       - 7002
@@ -59,7 +59,7 @@ services:
       SPARK_WORKER_WEBUI_PORT: 8081
       SPARK_PUBLIC_DNS: spark-worker
     networks:
-      - scylla
+      - cassnetwork
     expose:
       - 7012
       - 7013
@@ -76,4 +76,4 @@ services:
       - spark-master
 
 networks:
-  scylla:
+  cassnetwork:

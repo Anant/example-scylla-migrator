@@ -1,10 +1,13 @@
 *.class
 *.log
 build.sbt_back
+data/
+config.yaml
 
 # sbt specific
 dist/*
-target/
+# target/
+project/
 lib_managed/
 src_managed/
 project/boot/
