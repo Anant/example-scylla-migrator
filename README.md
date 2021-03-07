@@ -102,6 +102,6 @@ select count(*) from demo.spacecraft_journey_catalog ;
 And that will wrap up the walkthrough. With Scylla's Spark Migrator, we were able to migrate data from one Cassandra container to another. We could use actual host addresses to move data between Cassandra clusters, but for the purposes of a quick learning exercise, we just used Docker to simulate it.
 
 ## Additional Resources
-[Live Recording with Walkthrough]()
-[Accompanying Blog]()
-[Accompanying SlideShare]()
+- [Live Recording with Walkthrough]()
+- [Accompanying Blog]()
+- [Accompanying SlideShare]()
