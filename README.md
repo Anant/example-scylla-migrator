@@ -105,3 +105,6 @@ And that will wrap up the walkthrough. With Scylla's Spark Migrator, we were abl
 - [Live Recording with Walkthrough]()
 - [Accompanying Blog]()
 - [Accompanying SlideShare]()
+- [Deep Dive into the Scylla Spark Migrator](https://www.scylladb.com/2019/03/12/deep-dive-into-the-scylla-spark-migrator/)
+- [Docker Container exited with code 137](https://www.petefreitag.com/item/848.cfm)
+
