@@ -11,7 +11,7 @@ This repo is a fork off the original [scylla-migrator](https://github.com/scylla
 ### 1. Clone this repo
 
 ```bash
-git clone https://github.com/adp8ke/scylla-migrator.git
+git clone https://github.com/Anant/scylla-migrator.git
 ```
 
 ### 2. Get Docker containers started
