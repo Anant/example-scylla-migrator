@@ -3,16 +3,13 @@ package com.scylladb.migrator
 import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Paths }
 import java.util.concurrent.{ ScheduledThreadPoolExecutor, TimeUnit }
-import com.amazonaws.services.dynamodbv2.streamsadapter.model.RecordAdapter
 import com.datastax.spark.connector.rdd.partitioner.{ CassandraPartition, CqlTokenRange }
 import com.datastax.spark.connector.rdd.partitioner.dht.Token
 import com.datastax.spark.connector.writer._
 import com.scylladb.migrator.config._
-import com.scylladb.migrator.writers.DynamoStreamReplication
 import org.apache.log4j.{ Level, LogManager, Logger }
 import org.apache.spark.sql._
 import org.apache.spark.streaming.{ Seconds, StreamingContext }
-import org.apache.spark.streaming.kinesis.{ KinesisInputDStream, SparkAWSCredentials }
 import sun.misc.{ Signal, SignalHandler }
 
 import scala.util.control.NonFatal
@@ -51,13 +48,7 @@ object Migrator {
             migratorConfig.skipTokenRanges)
         case parquetSource: SourceSettings.Parquet =>
           readers.Parquet.readDataFrame(spark, parquetSource)
-        case dynamoSource: SourceSettings.DynamoDB =>
-          val tableDesc = DynamoUtils
-            .buildDynamoClient(dynamoSource.endpoint, dynamoSource.credentials, dynamoSource.region)
-            .describeTable(dynamoSource.table)
-            .getTable
 
-          readers.DynamoDB.readDataFrame(spark, dynamoSource, tableDesc)
       }
 
     log.info("Created source dataframe; resulting schema:")
@@ -119,59 +110,6 @@ object Migrator {
             sourceDF.dataFrame,
             sourceDF.timestampColumns,
             tokenRangeAccumulator)
-        case target: TargetSettings.DynamoDB =>
-          val sourceAndDescriptions = migratorConfig.source match {
-            case source: SourceSettings.DynamoDB =>
-              if (target.streamChanges) {
-                log.info(
-                  "Source is a Dynamo table and change streaming requested; enabling Dynamo Stream")
-                DynamoUtils.enableDynamoStream(source)
-              }
-              val sourceDesc =
-                DynamoUtils
-                  .buildDynamoClient(source.endpoint, source.credentials, source.region)
-                  .describeTable(source.table)
-                  .getTable
-
-              Some(
-                (
-                  source,
-                  sourceDesc,
-                  DynamoUtils.replicateTableDefinition(
-                    sourceDesc,
-                    target
-                  )
-                ))
-
-            case _ =>
-              None
-          }
-
-          writers.DynamoDB.writeDataframe(
-            target,
-            migratorConfig.renames,
-            sourceDF.dataFrame,
-            sourceAndDescriptions.map(_._3))
-
-          sourceAndDescriptions.foreach {
-            case (source, sourceDesc, targetDesc) =>
-              if (target.streamChanges) {
-                log.info("Done transferring table snapshot. Starting to transfer changes")
-
-                DynamoStreamReplication.createDStream(
-                  spark,
-                  streamingContext,
-                  source,
-                  target,
-                  sourceDF.dataFrame.schema,
-                  sourceDesc,
-                  targetDesc,
-                  migratorConfig.renames)
-
-                streamingContext.start()
-                streamingContext.awaitTermination()
-              }
-          }
       }
     } catch {
       case NonFatal(e) => // Catching everything on purpose to try and dump the accumulator state

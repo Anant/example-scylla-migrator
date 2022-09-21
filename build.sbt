@@ -18,7 +18,7 @@ lazy val root = (project in file(".")).settings(
   scalacOptions ++= Seq("-deprecation", "-unchecked", "-Ypartial-unification"),
   parallelExecution in Test := false,
   fork                      := true,
-  scalafmtOnCompile         := true,
+//  scalafmtOnCompile         := true,
   libraryDependencies ++= Seq(
     "org.apache.spark" %% "spark-streaming"      % "3.1.1" % "provided",
     "org.apache.spark" %% "spark-sql"            % "3.1.1" % "provided",
