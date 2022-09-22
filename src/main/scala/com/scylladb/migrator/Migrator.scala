@@ -46,9 +46,6 @@ object Migrator {
             cassandraSource,
             cassandraSource.preserveTimestamps,
             migratorConfig.skipTokenRanges)
-        case parquetSource: SourceSettings.Parquet =>
-          readers.Parquet.readDataFrame(spark, parquetSource)
-
       }
 
     log.info("Created source dataframe; resulting schema:")
