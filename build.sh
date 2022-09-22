@@ -1,5 +1,7 @@
 SCALA_VERSION=2.12.14
 
+git submodule update --init --recursive
+
 pushd spark-cassandra-connector
 sbt clean package
 sbt ++${SCALA_VERSION} assembly
