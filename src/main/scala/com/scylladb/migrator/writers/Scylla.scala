@@ -17,6 +17,9 @@ object Scylla {
     df: DataFrame,
     timestampColumns: Option[TimestampColumns],
     tokenRangeAccumulator: Option[TokenRangeAccumulator])(implicit spark: SparkSession): Unit = {
+      spark.conf.set("spark.cassandra.connection.config.cloud.path", target.cloudconnectionbuild)
+      spark.conf.set("spark.cassandra.auth.username", "ogZWaRufYteBjFcBZMGkxvDM")
+      spark.conf.set("spark.cassandra.auth.password", "fAT8ntox3FIeGniBR6rwvBAdp4fte3iiII1OpuEsourrofv8cB,Kx4ISq+9wH+bEJh1qIyMX8CLU76KqNu0v4-UkA5i_O.LLG+f5mWYgpDmRdIOYE4jaHZgGRe_.+oee")
     val connector = Connectors.targetConnector(spark.sparkContext.getConf, target)
     val tempWriteConf = WriteConf
       .fromSparkConf(spark.sparkContext.getConf)

@@ -99,8 +99,9 @@ source:
 # Configuration for the database you're copying into
 target:
   type: scylla
-  host: scylla 
-  port: 9042
+  cloudconnectionbuild: path
+  #host: scylla 
+  #port: 9042
   #optional, if not specified None will be used
   #localDC: <localdc>
   #credentials:
