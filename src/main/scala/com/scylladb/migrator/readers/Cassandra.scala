@@ -63,7 +63,7 @@ object Cassandra {
           field <- if (isRegular)
                     List(
                       origField,
-                      StructField(s"${origField.name}_ttl", IntegerType, true),
+                      StructField(s"${origField.name}_ttl", LongType, true),
                       StructField(s"${origField.name}_writetime", LongType, true))
                   else List(origField)
         } yield field)
@@ -101,10 +101,10 @@ object Cassandra {
             case (fieldName, (ordinal, ttlOrdinal, writetimeOrdinal)) =>
               (
                 fieldName,
-                if (row.isNullAt(ordinal)) CassandraOption.Null
-                else CassandraOption.Value(row.get(ordinal)),
+                if (row.isNullAt(ordinal)) None
+                else CassandraOption.Value(row.get(ordinal)).get,
                 if (row.isNullAt(ttlOrdinal)) None
-                else Some(row.getInt(ttlOrdinal)),
+                else Some(row.getLong(ttlOrdinal)),
                 if (row.isNullAt(writetimeOrdinal)) None
                 else Some(row.getLong(writetimeOrdinal)))
           }
@@ -134,8 +134,8 @@ object Cassandra {
                   if (row.isNullAt(ord)) None
                   else Some(row.get(ord))
                 }
-                .getOrElse(fields.getOrElse(field.name, CassandraOption.Unset))
-            } ++ Seq(ttl.getOrElse(0L), writetime.getOrElse(CassandraOption.Unset))
+                .getOrElse(fields.getOrElse(field.name, null))
+            } ++ Seq(ttl.getOrElse(0L), writetime.getOrElse(null))
 
             Row(newValues: _*)
         }
@@ -182,7 +182,7 @@ object Cassandra {
         val broadcastSchema = spark.sparkContext.broadcast(origSchema)
         val finalSchema = StructType(
           origSchema.fields ++
-            Seq(StructField(ttl, IntegerType, true), StructField(writeTime, LongType, true))
+            Seq(StructField(ttl, LongType, true), StructField(writeTime, LongType, true))
         )
 
         log.info("Schema that'll be used for writing to Scylla:")
@@ -230,12 +230,7 @@ object Cassandra {
       .withReadConf(readConf)
       .select(selection.columnRefs: _*)
 
-    val finalCassandraRDD = source.where match {
-      case Some(filter) => selectCassandraRDD.where(filter)
-      case None         => selectCassandraRDD
-    }
-
-    val rdd = finalCassandraRDD
+    val rdd = selectCassandraRDD
       .asInstanceOf[RDD[Row]]
       .map { row =>
         // We need to handle three conversions here that are not done for us:
@@ -272,6 +267,13 @@ object Cassandra {
       tableDef
     )
 
-    SourceDataFrame(resultingDataframe, selection.timestampColumns, true)
+    resultingDataframe.show()
+
+    val finalCassandraRDD = source.where match {
+      case Some(filter) => resultingDataframe.where(filter)
+      case None         => resultingDataframe
+  }
+
+    SourceDataFrame(finalCassandraRDD, selection.timestampColumns, true)
   }
 }

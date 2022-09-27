@@ -7,6 +7,7 @@ services:
       - scylla
     volumes:
       - ./data/scylla:/var/lib/scylla
+      - ./target/scala-2.12:/jars
     ports:
       - "8000:8000"
     command: "--smp 2 --memory 2048M --alternator-port 8000 --alternator-write-isolation always_use_lwt"
@@ -17,9 +18,10 @@ services:
       - scylla
     volumes:
       - ./data/cassandra:/var/lib/cassandra
+      - ./target/scala-2.12:/jars
 
   spark-master:
-    image: bde2020/spark-master:2.4.4-hadoop2.7
+    image: bde2020/spark-master:3.1.1-hadoop3.2
     container_name: spark-master
     hostname: spark-master
     environment:
@@ -50,7 +52,7 @@ services:
       - ./:/app
 
   spark-worker:
-    image: bde2020/spark-worker:2.4.4-hadoop2.7
+    image: bde2020/spark-worker:3.1.1-hadoop3.2
     hostname: spark-worker
     container_name: spark-worker-1
     environment:
