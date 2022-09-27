@@ -23,6 +23,7 @@ object Migrator {
     val database = args(1)
     val username = args(2)
     val password = args(3)
+    // val config_path = args(4)
     // val conf = new SparkConf().setAppName("scylla-migrator")
     // val sc = new SparkContext(conf)
     implicit val spark = SparkSession
@@ -31,10 +32,16 @@ object Migrator {
       .config("spark.task.maxFailures", "1024")
       .config("spark.stage.maxConsecutiveAttempts", "60")
       .config("spark.files", bundle_path)
+      // .config("spark.files", s"${bundle_path},${config_path}")
+      // .config("spark.files", config_path)
 	    .config("spark.cassandra.connection.config.cloud.path", s"secure-connect-${database}.zip")
 	    .config("spark.cassandra.auth.username", username)
 	    .config("spark.cassandra.auth.password", password)
+      // .config("spark.scylla.config", config_path)
       .getOrCreate
+
+    // sc.addFile(bundle_path)
+    // sc.addFile(config_path)
 
     val streamingContext = new StreamingContext(spark.sparkContext, Seconds(5))
 
