@@ -3,7 +3,7 @@ package com.scylladb.migrator.writers
 import com.datastax.spark.connector.writer._
 import com.datastax.spark.connector._
 import com.scylladb.migrator.Connectors
-import com.scylladb.migrator.config.{Rename, TargetSettings}
+import com.scylladb.migrator.config.{Credentials, Rename, TargetSettings}
 import com.scylladb.migrator.readers.TimestampColumns
 import org.apache.log4j.{LogManager, Logger}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
@@ -17,9 +17,6 @@ object Scylla {
     df: DataFrame,
     timestampColumns: Option[TimestampColumns],
     tokenRangeAccumulator: Option[TokenRangeAccumulator])(implicit spark: SparkSession): Unit = {
-      spark.conf.set("spark.cassandra.connection.config.cloud.path", target.cloudconnectionbuild)
-      spark.conf.set("spark.cassandra.auth.username", "ogZWaRufYteBjFcBZMGkxvDM")
-      spark.conf.set("spark.cassandra.auth.password", "fAT8ntox3FIeGniBR6rwvBAdp4fte3iiII1OpuEsourrofv8cB,Kx4ISq+9wH+bEJh1qIyMX8CLU76KqNu0v4-UkA5i_O.LLG+f5mWYgpDmRdIOYE4jaHZgGRe_.+oee")
     val connector = Connectors.targetConnector(spark.sparkContext.getConf, target)
     val tempWriteConf = WriteConf
       .fromSparkConf(spark.sparkContext.getConf)
@@ -63,27 +60,42 @@ object Scylla {
 
     val columnSelector = SomeColumns(renamedSchema.fields.map(_.name: ColumnRef): _*)
 
+    target.credentials match {
+      case Some(Credentials(username, password)) => {        
+        df.write
+        .format("org.apache.spark.sql.cassandra")
+        .options(Map(
+        "keyspace" -> target.keyspace,
+        "table" -> target.table,
+        "spark.files" -> "/app/secure-connect-database.zip",
+        "spark.cassandra.connection.config.cloud.path" -> "secure-connect-database.zip",
+        "spark.cassandra.auth.username" -> username,
+        "spark.cassandra.auth.password" -> password
+        )).save()
+      }
+    }
+
     // Spark's conversion from its internal Decimal type to java.math.BigDecimal
     // pads the resulting value with trailing zeros corresponding to the scale of the
     // Decimal type. Some users don't like this so we conditionally strip those.
-    val rdd =
-      if (!target.stripTrailingZerosForDecimals) df.rdd
-      else
-        df.rdd.map { row =>
-          Row.fromSeq(row.toSeq.map {
-            case x: java.math.BigDecimal => x.stripTrailingZeros()
-            case x                       => x
-          })
-        }
+    // val rdd =
+    //   if (!target.stripTrailingZerosForDecimals) df.rdd
+    //   else
+    //     df.rdd.map { row =>
+    //       Row.fromSeq(row.toSeq.map {
+    //         case x: java.math.BigDecimal => x.stripTrailingZeros()
+    //         case x                       => x
+    //       })
+    //     }
 
-    rdd
-      .saveToCassandra(
-        target.keyspace,
-        target.table,
-        columnSelector,
-        writeConf,
-        tokenRangeAccumulator = tokenRangeAccumulator
-      )(connector, SqlRowWriter.Factory)
+    // rdd
+    //   .saveToCassandra(
+    //     target.keyspace,
+    //     target.table,
+    //     columnSelector,
+    //     writeConf,
+    //     tokenRangeAccumulator = tokenRangeAccumulator
+    //   )(connector, SqlRowWriter.Factory)
   }
 
 }

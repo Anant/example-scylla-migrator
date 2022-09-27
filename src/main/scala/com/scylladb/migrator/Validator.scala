@@ -22,7 +22,7 @@ object Validator {
     }
 
     val targetSettings = config.target match {
-      case s: TargetSettings.Scylla => s
+      case s: TargetSettings.Astra => s
       case otherwise =>
         throw new RuntimeException(
           s"Validation only supports validating against Cassandra/Scylla " +
@@ -33,7 +33,7 @@ object Validator {
     val sourceConnector: CassandraConnector =
       Connectors.sourceConnector(spark.sparkContext.getConf, sourceSettings)
     val targetConnector: CassandraConnector =
-      Connectors.targetConnector(spark.sparkContext.getConf, targetSettings)
+      Connectors.targetConnectorAstra(spark.sparkContext.getConf, targetSettings)
 
     val renameMap = config.renames.map(rename => rename.from -> rename.to).toMap
     val sourceTableDef =
@@ -120,11 +120,19 @@ object Validator {
   }
 
   def main(args: Array[String]): Unit = {
+    val bundle_path = args(0)
+    val database = args(1)
+    val username = args(2)
+    val password = args(3)
     implicit val spark = SparkSession
       .builder()
       .appName("scylla-validator")
       .config("spark.task.maxFailures", "1024")
       .config("spark.stage.maxConsecutiveAttempts", "60")
+      .config("spark.files", bundle_path)
+	    .config("spark.cassandra.connection.config.cloud.path", s"secure-connect-${database}.zip")
+	    .config("spark.cassandra.auth.username", username)
+	    .config("spark.cassandra.auth.password", password)
       .getOrCreate
 
     Logger.getRootLogger.setLevel(Level.WARN)

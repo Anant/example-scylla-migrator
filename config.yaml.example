@@ -98,8 +98,11 @@ source:
 
 # Configuration for the database you're copying into
 target:
-  type: scylla
-  cloudconnectionbuild: path
+  type: astra
+  # NOTE: The destination table must have the same schema as the source table.
+  # If you'd like to rename columns, that's ok - see the renames parameter below.
+  keyspace: stocks
+  table: stocks
   #host: scylla 
   #port: 9042
   #optional, if not specified None will be used
@@ -122,10 +125,6 @@ target:
   #   - TLS_RSA_WITH_AES_128_CBC_SHA
   #   - TLS_RSA_WITH_AES_256_CBC_SHA
   #  protocol: TLS
-  # NOTE: The destination table must have the same schema as the source table.
-  # If you'd like to rename columns, that's ok - see the renames parameter below.
-  keyspace: stocks
-  table: stocks
   # Number of connections to use to Scylla when copying
   connections: 16
   # Spark pads decimals with zeros appropriate to their scale. This causes values

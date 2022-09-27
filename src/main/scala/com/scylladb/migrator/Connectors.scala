@@ -47,42 +47,51 @@ object Connectors {
       )
     )
 
-  // def targetConnector(sparkConf: SparkConf, targetSettings: TargetSettings.Scylla) =
-  //   new CassandraConnector(
-  //     CassandraConnectorConf(sparkConf).copy(
-  //       contactInfo = IpBasedContactInfo(
-  //         hosts = Set(new InetSocketAddress(targetSettings.host, targetSettings.port)),
-  //         authConf = targetSettings.credentials match {
-  //           case None                                  => NoAuthConf
-  //           case Some(Credentials(username, password)) => PasswordAuthConf(username, password)
-  //         },
-  //         cassandraSSLConf = targetSettings.sslOptions match {
-  //           case None => CassandraConnectorConf.DefaultCassandraSSLConf
-  //           case Some(sslOptions) =>
-  //             CassandraConnectorConf.CassandraSSLConf(
-  //               enabled            = sslOptions.enabled,
-  //               clientAuthEnabled  = sslOptions.clientAuthEnabled,
-  //               trustStorePath     = sslOptions.trustStorePath,
-  //               trustStorePassword = sslOptions.trustStorePassword,
-  //               trustStoreType     = sslOptions.trustStoreType.getOrElse("JKS"),
-  //               protocol           = sslOptions.protocol.getOrElse("TLS"),
-  //               keyStorePath       = sslOptions.keyStorePath,
-  //               keyStorePassword   = sslOptions.keyStorePassword,
-  //               enabledAlgorithms = sslOptions.enabledAlgorithms.getOrElse(
-  //                 Set("TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_RSA_WITH_AES_256_CBC_SHA")),
-  //               keyStoreType = sslOptions.keyStoreType.getOrElse("JKS")
-  //             )
-  //         }
-  //       ),
-  //       localDC                      = targetSettings.localDC,
-  //       localConnectionsPerExecutor  = targetSettings.connections,
-  //       remoteConnectionsPerExecutor = targetSettings.connections,
-  //       queryRetryCount              = -1
-  //     )
-  //   )
-
   def targetConnector(sparkConf: SparkConf, targetSettings: TargetSettings.Scylla) =
     new CassandraConnector(
-      CassandraConnectorConf(sparkConf)
+      CassandraConnectorConf(sparkConf).copy(
+        contactInfo = IpBasedContactInfo(
+          hosts = Set(new InetSocketAddress(targetSettings.host, targetSettings.port)),
+          authConf = targetSettings.credentials match {
+            case None                                  => NoAuthConf
+            case Some(Credentials(username, password)) => PasswordAuthConf(username, password)
+          },
+          cassandraSSLConf = targetSettings.sslOptions match {
+            case None => CassandraConnectorConf.DefaultCassandraSSLConf
+            case Some(sslOptions) =>
+              CassandraConnectorConf.CassandraSSLConf(
+                enabled            = sslOptions.enabled,
+                clientAuthEnabled  = sslOptions.clientAuthEnabled,
+                trustStorePath     = sslOptions.trustStorePath,
+                trustStorePassword = sslOptions.trustStorePassword,
+                trustStoreType     = sslOptions.trustStoreType.getOrElse("JKS"),
+                protocol           = sslOptions.protocol.getOrElse("TLS"),
+                keyStorePath       = sslOptions.keyStorePath,
+                keyStorePassword   = sslOptions.keyStorePassword,
+                enabledAlgorithms = sslOptions.enabledAlgorithms.getOrElse(
+                  Set("TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_RSA_WITH_AES_256_CBC_SHA")),
+                keyStoreType = sslOptions.keyStoreType.getOrElse("JKS")
+              )
+          }
+        ),
+        localDC                      = targetSettings.localDC,
+        localConnectionsPerExecutor  = targetSettings.connections,
+        remoteConnectionsPerExecutor = targetSettings.connections,
+        queryRetryCount              = -1
+      )
     )
+
+  // def targetConnector(sparkConf: SparkConf, targetSettings: TargetSettings.Scylla) =
+  //   new CassandraConnector(
+  //     CassandraConnectorConf(sparkConf)
+  //   )
+
+  def targetConnectorAstra(sparkConf: SparkConf, targetSettings: TargetSettings.Astra) =
+  new CassandraConnector(
+    CassandraConnectorConf(sparkConf).copy(
+      localConnectionsPerExecutor  = targetSettings.connections,
+      remoteConnectionsPerExecutor = targetSettings.connections,
+      queryRetryCount              = -1
+    )
+  )
 }

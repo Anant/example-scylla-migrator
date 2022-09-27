@@ -11,6 +11,7 @@ import org.apache.log4j.{ Level, LogManager, Logger }
 import org.apache.spark.sql._
 import org.apache.spark.streaming.{ Seconds, StreamingContext }
 import sun.misc.{ Signal, SignalHandler }
+import org.apache.spark.{SparkContext, SparkConf}
 
 import scala.util.control.NonFatal
 
@@ -18,12 +19,23 @@ object Migrator {
   val log = LogManager.getLogger("com.scylladb.migrator")
 
   def main(args: Array[String]): Unit = {
+    val bundle_path = args(0)
+    val database = args(1)
+    val username = args(2)
+    val password = args(3)
+    // val conf = new SparkConf().setAppName("scylla-migrator")
+    // val sc = new SparkContext(conf)
     implicit val spark = SparkSession
       .builder()
       .appName("scylla-migrator")
       .config("spark.task.maxFailures", "1024")
       .config("spark.stage.maxConsecutiveAttempts", "60")
+      .config("spark.files", bundle_path)
+	    .config("spark.cassandra.connection.config.cloud.path", s"secure-connect-${database}.zip")
+	    .config("spark.cassandra.auth.username", username)
+	    .config("spark.cassandra.auth.password", password)
       .getOrCreate
+
     val streamingContext = new StreamingContext(spark.sparkContext, Seconds(5))
 
     Logger.getRootLogger.setLevel(Level.WARN)
@@ -33,6 +45,20 @@ object Migrator {
 
     val migratorConfig =
       MigratorConfig.loadFrom(spark.conf.get("spark.scylla.config"))
+
+    // migratorConfig.target match {
+    //   case target: TargetSettings.Astra =>
+    //     // spark.conf.set("spark.files", target.bundlePath)
+    //     // sc.addFile(target.bundlePath)
+    //     // spark.sparkContext.addFile(target.bundlePath)
+    //     spark.conf.set("spark.cassandra.connection.config.cloud.path", s"secure-connect-${target.database}.zip")
+    //     target.credentials match {
+    //       case Credentials(username, password) => {        
+    //         spark.conf.set("spark.cassandra.auth.username", username)
+    //         spark.conf.set("spark.cassandra.auth.password", password)
+    //       }
+    //     }
+    //   }
 
     log.info(s"Loaded config: ${migratorConfig}")
 
@@ -102,6 +128,13 @@ object Migrator {
       migratorConfig.target match {
         case target: TargetSettings.Scylla =>
           writers.Scylla.writeDataframe(
+            target,
+            migratorConfig.renames,
+            sourceDF.dataFrame,
+            sourceDF.timestampColumns,
+            tokenRangeAccumulator)
+        case target: TargetSettings.Astra =>
+          writers.Astra.writeDataframe(
             target,
             migratorConfig.renames,
             sourceDF.dataFrame,
