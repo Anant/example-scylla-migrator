@@ -29,7 +29,9 @@ object TargetSettings {
                   bundlePath: Option[String],
                   database: Option[String],
                   connections: Option[Int],
-                  stripTrailingZerosForDecimals: Boolean)
+                  stripTrailingZerosForDecimals: Boolean,
+                  writeTTLInS: Option[Int],
+                  writeWritetimestampInuS: Option[Long])
       extends TargetSettings
 
   implicit val decoder: Decoder[TargetSettings] =

@@ -26,13 +26,15 @@ object Migrator {
     val config_path = args(4)
     // val conf = new SparkConf().setAppName("scylla-migrator")
     // val sc = new SparkContext(conf)
+    // sc.addFile(bundle_path)
+    // sc.addFile(config_path)
     implicit val spark = SparkSession
       .builder()
       .appName("scylla-migrator")
       .config("spark.task.maxFailures", "1024")
       .config("spark.stage.maxConsecutiveAttempts", "60")
-      // .config("spark.files", bundle_path)
-      .config("spark.files", s"${bundle_path},${config_path}")
+      .config("spark.files", bundle_path)
+      // .config("spark.files", s"${bundle_path},${config_path}")
       // .config("spark.files", config_path)
       .config("spark.cassandra.connection.config.cloud.path", s"secure-connect-${database}.zip")
       .config("spark.cassandra.auth.username", username)
@@ -52,8 +54,12 @@ object Migrator {
     Logger.getLogger("org.apache.spark.scheduler.TaskSetManager").setLevel(Level.WARN)
     Logger.getLogger("com.datastax.spark.connector.cql.CassandraConnector").setLevel(Level.WARN)
 
-    val migratorConfig =
-      MigratorConfig.loadFrom(spark.conf.get("spark.scylla.config"))
+    val df = spark.read.option("wholetext", true).text(config_path)
+    val configDataString = df.select("value").first.mkString
+    val migratorConfig = MigratorConfig.loadFromConfig(configDataString)
+
+    // val migratorConfig =
+    //   // MigratorConfig.loadFrom(spark.conf.get("spark.scylla.config"))
 
     // migratorConfig.target match {
     //   case target: TargetSettings.Astra =>

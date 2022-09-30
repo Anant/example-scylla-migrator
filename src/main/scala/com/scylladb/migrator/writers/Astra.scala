@@ -40,14 +40,32 @@ object Astra {
 
     val connector = Connectors.targetConnectorAstra(spark.sparkContext.getConf, target)
 
-    val writeConf = WriteConf
+    val tempWriteConf = WriteConf
       .fromSparkConf(spark.sparkContext.getConf)
-      .copy(
-        ttl = timestampColumns.map(_.ttl).fold(TTLOption.defaultValue)(TTLOption.perRow),
-        timestamp = timestampColumns
-          .map(_.writeTime)
-          .fold(TimestampOption.defaultValue)(TimestampOption.perRow)
-      )
+
+    val writeConf = {
+      if (timestampColumns.nonEmpty) {
+        tempWriteConf.copy(
+          ttl = timestampColumns.map(_.ttl).fold(TTLOption.defaultValue)(TTLOption.perRow),
+          timestamp = timestampColumns
+            .map(_.writeTime)
+            .fold(TimestampOption.defaultValue)(TimestampOption.perRow)
+        )
+      } else if (target.writeTTLInS.nonEmpty || target.writeWritetimestampInuS.nonEmpty) {
+        var hardcodedTempWriteConf = tempWriteConf
+        if (target.writeTTLInS.nonEmpty) {
+          hardcodedTempWriteConf =
+            hardcodedTempWriteConf.copy(ttl = TTLOption.constant(target.writeTTLInS.get))
+        }
+        if (target.writeWritetimestampInuS.nonEmpty) {
+          hardcodedTempWriteConf = hardcodedTempWriteConf.copy(
+            timestamp = TimestampOption.constant(target.writeWritetimestampInuS.get))
+        }
+        hardcodedTempWriteConf
+      } else {
+        tempWriteConf
+      }
+    }
 
     println(writeConf)
 

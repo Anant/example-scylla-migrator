@@ -140,9 +140,9 @@ target:
   # ALL rows written will get the same TTL or writetimestamp or both
   # (you can uncomment just one of them, or all or none)
   # TTL in seconds (sample 7776000 is 90 days)
-  #writeTTLInS: 7776000
+  writeTTLInS: 7776000
   # writetime in microseconds (sample 1640998861000 is Saturday, January 1, 2022 2:01:01 AM GMT+01:00 )
-  #writeWritetimestampInuS: 1640998861000
+  writeWritetimestampInuS: 1640998861000
 
 # Example for loading into a DynamoDB target (for example, Scylla's Alternator):
 # target:

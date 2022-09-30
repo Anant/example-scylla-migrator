@@ -124,6 +124,7 @@ object Validator {
     val database = args(1)
     val username = args(2)
     val password = args(3)
+    val config_path = args(4)
     implicit val spark = SparkSession
       .builder()
       .appName("scylla-validator")
@@ -140,8 +141,13 @@ object Validator {
     Logger.getLogger("org.apache.spark.scheduler.TaskSetManager").setLevel(Level.INFO)
     Logger.getLogger("com.datastax.spark.connector.cql.CassandraConnector").setLevel(Level.INFO)
 
-    val migratorConfig =
-      MigratorConfig.loadFrom(spark.conf.get("spark.scylla.config"))
+
+    val df = spark.read.option("wholetext", true).text(config_path)
+    val configDataString = df.select("value").first.mkString
+    val migratorConfig = MigratorConfig.loadFromConfig(configDataString)
+
+    // val migratorConfig =
+    //   // MigratorConfig.loadFrom(spark.conf.get("spark.scylla.config"))
 
     log.info(s"Loaded config: ${migratorConfig}")
 
