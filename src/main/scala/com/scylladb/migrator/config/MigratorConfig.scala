@@ -36,9 +36,17 @@ object MigratorConfig {
   implicit val migratorConfigDecoder: Decoder[MigratorConfig] = deriveDecoder[MigratorConfig]
   implicit val migratorConfigEncoder: Encoder[MigratorConfig] = deriveEncoder[MigratorConfig]
 
-  def loadFrom(path: String): MigratorConfig = {
-    val configData = scala.io.Source.fromFile(path).mkString
+  // def loadFrom(path: String): MigratorConfig = {
+  //   val configData = scala.io.Source.fromFile(path).mkString
 
+  //   parser
+  //     .parse(configData)
+  //     .leftWiden[Error]
+  //     .flatMap(_.as[MigratorConfig])
+  //     .valueOr(throw _)
+  // }
+
+  def loadFromConfig(configData: String): MigratorConfig = {
     parser
       .parse(configData)
       .leftWiden[Error]
