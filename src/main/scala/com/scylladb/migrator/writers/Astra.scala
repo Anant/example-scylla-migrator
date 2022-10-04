@@ -20,23 +20,14 @@ object Astra {
     df: DataFrame,
     timestampColumns: Option[TimestampColumns],
     tokenRangeAccumulator: Option[TokenRangeAccumulator])(implicit spark: SparkSession): Unit = {
-
-    // spark.sparkContext.addFile(target.bundlePath)
-    // spark.conf.set("spark.cassandra.connection.config.cloud.path", s"secure-connect-${target.database}.zip")
-    // migratorConfig.target match {
-    //   case target: TargetSettings.Astra =>
-    //     target.credentials match {
-    //       case Credentials(username, password) => {        
-    //         spark.conf.set("spark.cassandra.auth.username", username)
-    //         spark.conf.set("spark.cassandra.auth.password", password)
-    //       }
-    //     }
-    //   }
       
     log.info("spark.sparkContext.getConf :: " + spark.sparkContext.getConf)
     val arrayConfig = spark.sparkContext.getConf.getAll
     for (conf <- arrayConfig)
       println(conf._1 + ", " + conf._2)
+
+    val keyspace = spark.conf.get("spark.migration.keyspace")    
+    val tableName = spark.conf.get("spark.migration.table")
 
     val connector = Connectors.targetConnectorAstra(spark.sparkContext.getConf, target)
 
@@ -101,8 +92,8 @@ object Astra {
 
     rdd
       .saveToCassandra(
-        target.keyspace,
-        target.table,
+        keyspace,
+        tableName,
         columnSelector,
         writeConf,
         tokenRangeAccumulator = tokenRangeAccumulator

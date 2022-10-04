@@ -212,8 +212,11 @@ object Cassandra {
         fetchSizeInRows = source.fetchSize
       )
 
+    val keyspace = spark.conf.get("spark.migration.keyspace") 
+    val tableName = spark.conf.get("spark.migration.table")
+    
     val tableDef =
-      connector.withSessionDo(Schema.tableFromCassandra(_, source.keyspace, source.table))
+      connector.withSessionDo(Schema.tableFromCassandra(_, keyspace, tableName))
     log.info("TableDef retrieved for source:")
     log.info(tableDef)
 
@@ -225,8 +228,8 @@ object Cassandra {
 
     val selectCassandraRDD = spark.sparkContext
       .cassandraTable[CassandraSQLRow](
-        source.keyspace,
-        source.table,
+        keyspace,
+        tableName,
         (s, e) => !tokenRangesToSkip.contains((s, e)))
       .withConnector(connector)
       .withReadConf(readConf)
