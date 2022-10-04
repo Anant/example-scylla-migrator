@@ -212,8 +212,8 @@ object Cassandra {
         fetchSizeInRows = source.fetchSize
       )
 
-    val keyspace = spark.conf.get("spark.migration.keyspace") 
-    val tableName = spark.conf.get("spark.migration.table")
+    val keyspace = spark.conf.get("spark.migration.source.keyspace") 
+    val tableName = spark.conf.get("spark.migration.source.table")
     
     val tableDef =
       connector.withSessionDo(Schema.tableFromCassandra(_, keyspace, tableName))

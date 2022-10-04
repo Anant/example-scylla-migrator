@@ -26,8 +26,8 @@ object Astra {
     for (conf <- arrayConfig)
       println(conf._1 + ", " + conf._2)
 
-    val keyspace = spark.conf.get("spark.migration.keyspace")    
-    val tableName = spark.conf.get("spark.migration.table")
+    val keyspace = spark.conf.get("spark.migration.target.keyspace")    
+    val tableName = spark.conf.get("spark.migration.target.table")
 
     val connector = Connectors.targetConnectorAstra(spark.sparkContext.getConf, target)
 

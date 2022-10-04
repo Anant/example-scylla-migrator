@@ -6,7 +6,7 @@ lazy val root = (project in file(".")).settings(
       organization := "com.scylladb",
       scalaVersion := "2.12.14"
     )),
-  name := "scylla-migrator",
+  name := "scylla-migrator-jb",
   version := "0.0.1",
   mainClass := Some("com.scylladb.migrator.Migrator"),
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
