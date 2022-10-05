@@ -13,6 +13,10 @@ object Validator {
 
   def runValidation(config: MigratorConfig)(
     implicit spark: SparkSession): List[RowComparisonFailure] = {
+
+    val keyspace = spark.conf.get("spark.validation.keyspace")    
+    val tableName = spark.conf.get("spark.validation.table")
+
     val sourceSettings = config.source match {
       case s: SourceSettings.Cassandra => s
       case otherwise =>
@@ -38,7 +42,7 @@ object Validator {
     val renameMap = config.renames.map(rename => rename.from -> rename.to).toMap
     val sourceTableDef =
       sourceConnector.withSessionDo(
-        Schema.tableFromCassandra(_, sourceSettings.keyspace, sourceSettings.table))
+        Schema.tableFromCassandra(_, keyspace, tableName))
 
     val source = {
       val regularColumnsProjection =
@@ -59,7 +63,7 @@ object Validator {
           .map(colDef => ColumnName(colDef.columnName, renameMap.get(colDef.columnName)))
 
       spark.sparkContext
-        .cassandraTable(sourceSettings.keyspace, sourceSettings.table)
+        .cassandraTable(keyspace, tableName)
         .withConnector(sourceConnector)
         .withReadConf(
           ReadConf
@@ -95,8 +99,8 @@ object Validator {
 
       source
         .leftJoinWithCassandraTable(
-          targetSettings.keyspace,
-          targetSettings.table,
+          keyspace,
+          tableName,
           SomeColumns(primaryKeyProjection ++ regularColumnsProjection: _*),
           SomeColumns(joinKey: _*))
         .withConnector(targetConnector)
