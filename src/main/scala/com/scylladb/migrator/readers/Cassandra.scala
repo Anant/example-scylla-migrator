@@ -65,7 +65,7 @@ object Cassandra {
           field <- if (isRegular)
                     List(
                       origField,
-                      StructField(s"${origField.name}_ttl", LongType, true),
+                      StructField(s"${origField.name}_ttl", IntegerType, true),
                       StructField(s"${origField.name}_writetime", LongType, true))
                   else List(origField)
         } yield field)
@@ -106,7 +106,7 @@ object Cassandra {
                 if (row.isNullAt(ordinal)) None
                 else CassandraOption.Value(row.get(ordinal)).get,
                 if (row.isNullAt(ttlOrdinal)) None
-                else Some(row.getLong(ttlOrdinal)),
+                else Some(row.getInt(ttlOrdinal)),
                 if (row.isNullAt(writetimeOrdinal)) None
                 else Some(row.getLong(writetimeOrdinal)))
           }
@@ -137,7 +137,7 @@ object Cassandra {
                   else Some(row.get(ord))
                 }
                 .getOrElse(fields.getOrElse(field.name, null))
-            } ++ Seq(ttl.getOrElse(0L), writetime.getOrElse(null))
+            } ++ Seq(ttl.getOrElse(0), writetime.getOrElse(null))
 
             Row(newValues: _*)
         }
@@ -184,7 +184,7 @@ object Cassandra {
         val broadcastSchema = spark.sparkContext.broadcast(origSchema)
         val finalSchema = StructType(
           origSchema.fields ++
-            Seq(StructField(ttl, LongType, true), StructField(writeTime, LongType, true))
+            Seq(StructField(ttl, IntegerType, true), StructField(writeTime, LongType, true))
         )
 
         log.info("Schema that'll be used for writing to Scylla:")
